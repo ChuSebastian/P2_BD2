@@ -1,2 +1,2 @@
-# P2_BD2
-Busqueda y Recuperación de Información Parte 1
+# Proyecto N°2 BD2
+Busqueda y Recuperación de Información
