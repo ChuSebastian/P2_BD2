@@ -2,20 +2,21 @@
 
 {% block content %}
 <div class="search-container">
+    <h2>Buscar canciones por letra</h2>
     <form action="{{ url_for('search_query') }}" method="post">
-        <label for="lyrics">Ingrese consulta:</label>
-        <input type="text" id="lyrics" name="lyrics" placeholder="Ingrese letras de canciones...">
+        <label for="lyrics">Letra:</label>
+        <input type="text" id="lyrics" name="lyrics" required>
         
-        <label for="top_k">Top K:</label>
-        <input type="number" id="top_k" name="top_k" min="1" placeholder="Número de canciones...">
+        <label for="top_k">Top K resultados:</label>
+        <input type="number" id="top_k" name="top_k" min="1" required>
         
         <label for="technique">Técnica:</label>
         <select id="technique" name="technique">
+            <option value="python">Implementación en Python</option>
             <option value="postgres">Postgres</option>
-            <option value="python">Mi implementación</option>
         </select>
         
-        <button type="submit">Filtrar</button>
+        <button type="submit">Buscar</button>
     </form>
 </div>
 {% endblock %}

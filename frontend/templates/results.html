@@ -15,7 +15,7 @@
                 <th>Artista</th>
                 <th>Lyrics</th>
                 <th>Keywords</th>
-                <th>Image</th>
+                <!--<th>Image</th>-->
             </tr>
         </thead>
         <tbody>
@@ -28,7 +28,7 @@
                 <td>{{ result.track_artist }}</td>
                 <td>{{ result.lyrics }}</td>
                 <td>{{ result.keywords | join(', ') }}</td>
-                <td><img src="{{ url_for('static', filename='images/' + result.track_id + '.jpg') }}" alt="{{ result.track_name }}"></td>
+                <!-- <td><img src="{{ result.image }}" alt="{{ result.track_name }}" style="width:100px;height:auto;"></td> -->  
             </tr>
             {% endfor %}
         </tbody>
