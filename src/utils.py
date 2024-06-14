@@ -1,0 +1,1 @@
+# funciones auxiliares: calculo TF-IDF, normalizacion de vectores, etc

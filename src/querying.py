@@ -1,0 +1,1 @@
+# implementacion de la logica para realizar las consultas y calcular la similitud de coseno
