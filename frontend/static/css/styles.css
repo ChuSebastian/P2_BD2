@@ -1,112 +1,85 @@
-/* Estilos generales */
+/* frontend/static/css/styles.css */
+
+/* Estilos generales para la página */
 body {
     font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
 }
 
 header {
-    background-color: #4CAF50;
-    padding: 20px;
+    background-color: #333;
+    color: white;
     text-align: center;
-    color: white;
+    padding: 1rem;
 }
 
-nav ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-nav ul li {
-    display: inline;
-    margin: 0 10px;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
+main {
+    padding: 2rem;
 }
 
 footer {
-    background-color: #4CAF50;
-    padding: 10px;
+    background-color: #333;
+    color: white;
     text-align: center;
-    color: white;
-    position: absolute;
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
     bottom: 0;
-    width: 100%;
 }
 
-/* Estilos para el contenedor de búsqueda */
-.search-container {
-    margin: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.search-container label {
-    display: block;
-    margin: 10px 0 5px;
-}
-
-.search-container input,
-.search-container select {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.search-container button {
-    width: 100%;
-    padding: 10px;
-    background-color: #4CAF50;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.search-container button:hover {
-    background-color: #45a049;
-}
-
-/* Estilos para los resultados */
-.results-container {
-    margin: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.results-container h2 {
-    margin-top: 0;
-}
-
-.results-container table {
+table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.results-container table, th, td {
+th, td {
+    padding: 1rem;
     border: 1px solid #ddd;
-}
-
-.results-container th, td {
-    padding: 10px;
     text-align: left;
 }
 
-.results-container img {
-    max-width: 50px;
-    max-height: 50px;
-    border-radius: 5px;
+th {
+    background-color: #f8f8f8;
 }
+
+td img {
+    max-width: 100px;
+}
+
+/* Ajustes específicos para el ancho de columnas */
+th.top, td.top {
+    width: 5%;
+}
+
+th.score, td.score {
+    width: 10%;
+}
+
+th.track-id, td.track-id {
+    width: 15%;
+}
+
+th.name, td.name {
+    width: 10%;
+}
+
+th.artist, td.artist {
+    width: 10%;
+}
+
+th.lyrics, td.lyrics {
+    width: 30%;
+}
+
+th.keywords, td.keywords {
+    width: 15%;
+}
+
+th.image, td.image {
+    width: 10%;
+}
+
