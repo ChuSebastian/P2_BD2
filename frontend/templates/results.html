@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="results-container">
+    <h2>Resultados de la búsqueda</h2>
+    <p>Mostrando resultados para: "{{ query }}" usando {{ technique }}.</p>
+    <p>Tiempo total: {{ total_time }} segundos.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Top</th>
+                <th>Score</th>
+                <th>Track ID</th>
+                <th>Nombre</th>
+                <th>Artista</th>
+                <th>Lyrics</th>
+                <th>Keywords</th>
+                <th>Image</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.top }}</td>
+                <td>{{ result.score }}</td>
+                <td>{{ result.track_id }}</td>
+                <td>{{ result.track_name }}</td>
+                <td>{{ result.track_artist }}</td>
+                <td>{{ result.lyrics }}</td>
+                <td>{{ result.keywords | join(', ') }}</td>
+                <td><img src="{{ url_for('static', filename='images/' + result.track_id + '.jpg') }}" alt="{{ result.track_name }}"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

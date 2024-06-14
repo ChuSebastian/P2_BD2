@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="search-container">
+    <form action="{{ url_for('search_query') }}" method="post">
+        <label for="lyrics">Ingrese consulta:</label>
+        <input type="text" id="lyrics" name="lyrics" placeholder="Ingrese letras de canciones...">
+        
+        <label for="top_k">Top K:</label>
+        <input type="number" id="top_k" name="top_k" min="1" placeholder="Número de canciones...">
+        
+        <label for="technique">Técnica:</label>
+        <select id="technique" name="technique">
+            <option value="postgres">Postgres</option>
+            <option value="python">Mi implementación</option>
+        </select>
+        
+        <button type="submit">Filtrar</button>
+    </form>
+</div>
+{% endblock %}
