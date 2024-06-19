@@ -113,3 +113,16 @@ ORDER BY rank DESC LIMIT 100;
 - plainto_tsquery convierte una cadena de texto plano en una consulta de texto completo, y @@ es el operador que encuentra los documentos que coinciden con la consulta. ts_rank_cd calcula un ranking de los documentos basado en la coincidencia.
 - Finalmente, se restablecen las configuraciones al estado normal para permitir que PostgreSQL optimice las búsquedas de la manera habitual.
 
+
+
+
+
+
+
+
+#Fronted
+##Fronted realizando busqueda
+![Imagen de Ejemplo](/front1.jpg "Vista de ejemplo")
+
+![Imagen de Ejemplo](/front2.jpg "Vista de ejemplo")
+
