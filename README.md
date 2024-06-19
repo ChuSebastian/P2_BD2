@@ -113,3 +113,47 @@ ORDER BY rank DESC LIMIT 100;
 - plainto_tsquery convierte una cadena de texto plano en una consulta de texto completo, y @@ es el operador que encuentra los documentos que coinciden con la consulta. ts_rank_cd calcula un ranking de los documentos basado en la coincidencia.
 - Finalmente, se restablecen las configuraciones al estado normal para permitir que PostgreSQL optimice las búsquedas de la manera habitual.
 
+## Experimentación
+
+La experimentación depende mucho de la computadora en ejecución. En este caso los parámetros de la máquina:
+
+![alt text](image.png)
+
+### Calculo del mejor blocket_limit
+
+El blocket limit lo definimos como el tamaño máximo de datos que se permite almacenar en memoria antes de escribir un bloque en disco.
+
+Para este parametro vamos a considerar **PAGE_SIZE** y la cantidad de momoria asignada.
+
+Entonces:
+
+```shell
+getcong PAGE_SIZE
+```
+
+Este comando nos va a botar un tamaño de página de 4096
+
+La memoria asignada va a ser de **1GB**.
+
+### Prubas con Variación en N datos
+
+Parámetros:
+
+- Query de consulta: "All around me are familiar faces Worn-out places"
+- Blocket_Limit: memory_to_use // page_size
+
+Tabla con datos obtenidos:
+
+|    N   |  PostgreSQL  |  Implementacion  |
+|-------:|-------------:|-----------------:|
+|   100  |        0.128 |          0.428033 |
+|  1000  |        0.097 |          2.046529 |
+|  2000  |        0.127 |          3.185042 |
+|  4000  |        0.089 |          7.082197 |
+|  8000  |        0.083 |         17.902043 |
+| 16000  |        0.521 |         47.720579 |
+| 32000  |        0.215 |         79.181657 |
+| 64000  |        0.851 |        260.905411 |
+
+
+Los tiempos obtenidos con la implementación son lentos debidos a la computadora donde se ha hecho el experimento, esto se prueba con la practica del frontend donde los tiempos han sido iguales o menores a postgresql.
