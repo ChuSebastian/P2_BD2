@@ -8,8 +8,7 @@ El presente proyecto tiene como objetivo desarrollar estas estructuras de datos 
 Con respecto al índice invertido textual, se utiliza para asociar términos de consulta con los documentos que los contienen ya que mejora la velocidad y precisión del retorno de información, lo que facilita la recuperación eficiente de documentos relevantes en función de los términos de búsqueda.
 En cuanto al índice multidimensional, se utilizar para representar características tanto de texto como de audio, lo que permite realizar consultas que involucren múltiples dimensiones, como la similitud de texto y audio en función de diferentes atributos.
 
-
-## Dominio de datos
+## Preparación
 La base de datos utilizada es la Audio features and lyrics of Spotify songs, con al rededor de 18000 canciones con los campos:
 
 |    **Campo**    |
@@ -18,30 +17,17 @@ La base de datos utilizada es la Audio features and lyrics of Spotify songs, con
 | ```track_name```  | 
 | ```track_artist``` | 
 | ```lyrics``` | 
-| ```track_popularity``` | 
-| ```track_album_id``` |
-| ```track_album_name``` | 
-| ```track_album_release_date``` |
-| ```playlist_name``` |
-| ```playlist_id``` |
-| ```playlist_genre``` |
-| ```playlist_subgenre``` |
-| ```danceability``` |
-| ```enery``` | 
-| ```key``` | 
-| ```loudness``` | 
-| ```mode``` | 
-| ```speechness``` | 
-| ```acousticness``` | 
-| ```instrumentalness``` | 
-| ```liveness``` |
-| ```valence``` |
-| ```tempo``` |
-| ```duration_ms``` |
-| ```language``` |
+
+## Preprocesamiento
+
+![image](https://github.com/ChuSebastian/P2_BD2/assets/45053945/125df0ed-5b16-4193-b3e3-e5f7a8cb76ca)
+
+![image](https://github.com/ChuSebastian/P2_BD2/assets/45053945/8588dac4-a711-4ad9-9746-1d5d46f63d15)
 
 
+## Construcción del Índice
 
+![image](https://github.com/ChuSebastian/P2_BD2/assets/45053945/f75929c4-291b-4775-bba2-ab3deadee251)
 
 
 
@@ -92,7 +78,7 @@ WHERE track.track_id = x.track_id;
 ```
 - En este bloque de código, cada campo de texto (track_name, track_artist, lyrics) es convertido a un tsvector con diferentes ponderaciones (A, B, C) que pueden ser utilizadas para dar más o menos importancia a cada campo en las búsquedas.
 
-### Creación del índice
+## Creación del índice
 - Se crea un índice utilizando el método GIN (Generalized Inverted Index) sobre la columna indexed. Los índices GIN son particularmente efectivos para manejar datos que contienen múltiples valores en una sola columna (como vectores de texto).
   particular, la extensión relevante es más probable que se relacione con funcionalidades de búsqueda de texto completo.
 ```python
@@ -100,7 +86,7 @@ CREATE INDEX IF NOT EXISTS lyrics_idx_gin ON track USING gin(indexed);
 
 ```
 
-###Búsqueda y recuperación de datos 
+## Búsqueda y recuperación de datos 
 - Para buscar en los datos, se ajusta una configuración para deshabilitar las búsquedas secuenciales, lo cual fuerza a PostgreSQL a utilizar el índice GIN.
 ```python
 SET enable_seqscan TO OFF;
@@ -157,3 +143,10 @@ Tabla con datos obtenidos:
 
 
 Los tiempos obtenidos con la implementación son lentos debidos a la computadora donde se ha hecho el experimento, esto se prueba con la practica del frontend donde los tiempos han sido iguales o menores a postgresql.
+
+
+# Fronted
+- Fronted realizando busqueda
+![Imagen de Ejemplo](/front1.jpg "Vista de ejemplo")
+
+![Imagen de Ejemplo](/front2.jpg "Vista de ejemplo")
