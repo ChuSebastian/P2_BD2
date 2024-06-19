@@ -87,33 +87,35 @@ class IndexInverted:
 
     def cosine_similarity(self, query, topk):
         scores = {}
+
         query_preprocessed = preprocessing_content(query)
         norm_query = 0
-        # Calculate the weighted term frequency for the query
         for token, tf_query in query_preprocessed.items():
             postings_list = self.search_term(token)
+
             if postings_list:
                 idf = np.log10(self.number_of_documents / len(postings_list))
                 tf_query = np.log10(tf_query + 1)
                 wt_query = tf_query * idf
+
                 norm_query += np.square(wt_query)
+
                 for document_id, tf in postings_list:
                     tf = np.log10(tf + 1)
                     wt = tf * idf
-                    if document_id in scores:
-                        scores[document_id] += wt_query * wt
-                    else:
-                        scores[document_id] = wt_query * wt
-        # Normalize the query vector
+
+                    scores[document_id] = scores.get(document_id, 0) + wt_query * wt
+
         norm_query = np.sqrt(norm_query)
-        # Normalize the document scores
-        for document_id in scores:
+
+        for document_id, score in scores.items():
             norm_document = self.search_norm(document_id)
+
             if norm_query != 0 and norm_document != 0:
-                scores[document_id] /= (norm_query * norm_document)
+                scores[document_id] = score / (norm_query * norm_document)
             else:
                 scores[document_id] = 0
-        # Sort the documents by their scores in descending order and take the top k
+
         topk_documents = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:topk]
 
         return topk_documents

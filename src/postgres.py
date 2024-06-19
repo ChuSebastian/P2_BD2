@@ -5,7 +5,7 @@ def get_db_connection():
         dbname="project2BD",
         user="postgres",
         password="admin",
-        host="172.18.0.2",
+        host="172.18.0.3",
         port="5432"
     )
     return conn

@@ -24,6 +24,6 @@ else:
 
 topK = 10
 query = "Nicky Romero I close my eyes and dream You're all I see You, you're all I need"
-documents_with_scores = index_inverted.cosine_similarity(query, topK)
-for document, score in documents_with_scores:
-    print(f"Track_id: {document}, Score: {score}")
+songs_with_scores = index_inverted.cosine_similarity(query, topK)
+for track_id, score in songs_with_scores:
+    print(f"Track_id: {track_id}, Score: {score}")

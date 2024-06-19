@@ -1,5 +1,8 @@
 # funciones auxiliares: calculo TF-IDF, normalizacion de vectores, etc
 from typing import TypeVar,Generic, List, Optional
+import nltk
+import re
+from preprocessing import stemmer,stoplist
 # https://www.javatpoint.com/min-heap-implementation-in-python
 T = TypeVar('T')
 
@@ -71,3 +74,17 @@ class MinHeap(Generic[T]):
     
     def __len__(self) -> int:  
         return len(self.heap)
+    
+
+
+def extract_keywords_from_text(text):
+    terms = nltk.word_tokenize(text)
+    terms_count = {}
+    for term in terms:
+        normalized_term = re.sub(r'\W+', '', term.lower())
+        if not normalized_term:
+            continue
+        stemmed_term = stemmer.stem(normalized_term)
+        if stemmed_term not in stoplist and stemmed_term.isalpha():
+            terms_count[stemmed_term] = True  # Usamos True solo para marcar la presencia del término
+    return list(terms_count.keys())  # Devolvemos solo las palabras clave como una lista

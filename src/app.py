@@ -3,22 +3,47 @@
 from flask import Flask, render_template, request
 import json
 import os
-#from spotify_api import get_spotify_token, get_track_image
+import pandas as pd
+from indexing import IndexInverted
+from preprocessing import stoplist
+from utils import extract_keywords_from_text
+
 from postgres import get_db_connection,parse_tsvector
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
 
-# Configura tus credenciales de Spotify
-#CLIENT_ID = "3ea37211b94e4d00a7eb6c41c06d9a53"
-#CLIENT_SECRET = "b941ce9bee514798a8a41384ecd38bb5"
-#SPOTIFY_TOKEN = get_spotify_token(CLIENT_ID, CLIENT_SECRET)
+# Configuración de la base de datos e índice invertido
+spotify_song = 'data/spotify_songs.csv'
+index_file_name = 'data/results/merged_index.txt'
+
+# Carga el DataFrame
+df = pd.read_csv(spotify_song)
+tamanio = len(df)
+
+# Inicializa el índice invertido
+index_inverted = IndexInverted(spotify_song, tamanio, block_limit=20000, stop_words=stoplist)
+
+# Carga o crea el índice
+if os.path.exists(index_file_name):
+    try:
+        index_inverted.load_index(index_file_name)
+        print("Índice cargado.")
+    except Exception as e:
+        print(f"Error al cargar el índice: {e}")
+else:
+    try:
+        index_inverted.create_index_inverted()
+        print("Índice creado.")
+    except Exception as e:
+        print(f"Error al crear el índice: {e}")
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
-# SIMULACION
+
 @app.route('/search', methods=['POST'])
 def search_query():
-    lyrics = request.form['lyrics']
+    lyrics_query = request.form['lyrics']
     top_k = int(request.form['top_k'])
     technique = request.form['technique']
 
@@ -34,7 +59,7 @@ def search_query():
             ORDER BY rank DESC
             LIMIT %s;
         """
-        cur.execute(query, (lyrics, top_k))
+        cur.execute(query, (lyrics_query, top_k))
         results = cur.fetchall()
 
         cur.close()
@@ -56,17 +81,88 @@ def search_query():
 
         total_time = 0.1  # Este es un valor simulado para el tiempo total
     else:
-        # Simulación de resultados desde un archivo JSON
-        json_path = os.path.join(os.path.dirname(__file__), '../data/results/outputEsperado.json')
-        with open(json_path, 'r') as f:
-            simulated_results = json.load(f)
+        # Realizamos la búsqueda utilizando el índice invertido
+        documents_with_scores = index_inverted.cosine_similarity(lyrics_query, top_k)
 
-        # Filtramos los resultados según top_k
-        formatted_results = simulated_results[:top_k]
+        # Preparar los resultados para pasar a la plantilla
+        formatted_results = []
+        for idx, (document, score) in enumerate(documents_with_scores):
+            row = df.loc[df['track_id'] == document].iloc[0]
+
+            if pd.isna(row['lyrics']) or not row['lyrics'].strip():
+                lyrics_result = 'Columna lyrics vacia en la base de datos.'
+                keywords = ''
+            else:
+                lyrics_result = row['lyrics']
+                # Obtener keywords usando la función extract_keywords_from_text
+                content = f"{row['track_name']} {row['track_artist']} {lyrics_result}"
+                keywords = extract_keywords_from_text(content)
+
+            formatted_results.append({
+                'top': idx + 1,
+                'score': score,
+                'track_id': row['track_id'],
+                'track_name': row['track_name'],
+                'track_artist': row['track_artist'],
+                'lyrics': lyrics_result,
+                'keywords': keywords
+            })
 
         total_time = 0.1  # Este es un valor simulado para el tiempo total
 
-    return render_template('results.html', query=lyrics, technique=technique, results=formatted_results, total_time=total_time)
+    return render_template('results.html', query=lyrics_query, technique=technique, results=formatted_results, total_time=total_time)
+
+#@app.route('/search', methods=['POST'])
+#def search_query():
+#    lyrics = request.form['lyrics']
+#    top_k = int(request.form['top_k'])
+#    technique = request.form['technique']
+#
+#    if technique == 'postgres':
+#        # Conexión y consulta a la base de datos PostgreSQL
+#        conn = get_db_connection()
+#        cur = conn.cursor()
+#
+#        query = """
+#            SELECT ts_rank_cd(indexed, query) AS rank, track_id, track_name, track_artist, lyrics, keywords
+#            FROM track, plainto_tsquery('english', %s) query
+#            WHERE query @@ indexed
+#            ORDER BY rank DESC
+#            LIMIT %s;
+#        """
+#        cur.execute(query, (lyrics, top_k))
+#        results = cur.fetchall()
+#
+#        cur.close()
+#        conn.close()
+#
+#        # Convertimos los resultados a un formato adecuado para pasar a la plantilla
+#        formatted_results = [
+#            {
+#                'top': index + 1,
+#                'score': row[0],
+#                'track_id': row[1],
+#                'track_name': row[2],
+#                'track_artist': row[3],
+#                'lyrics': row[4],
+#                'keywords': parse_tsvector(row[5])
+#            }
+#            for index, row in enumerate(results)
+#        ]
+#
+#        total_time = 0.1  # Este es un valor simulado para el tiempo total
+#    else:
+#        # Simulación de resultados desde un archivo JSON
+#        json_path = os.path.join(os.path.dirname(__file__), '../data/results/outputEsperado.json')
+#        with open(json_path, 'r') as f:
+#            simulated_results = json.load(f)
+#
+#        # Filtramos los resultados según top_k
+#        formatted_results = simulated_results[:top_k]
+#
+#        total_time = 0.1  # Este es un valor simulado para el tiempo total
+#
+#    return render_template('results.html', query=lyrics, technique=technique, results=formatted_results, total_time=total_time)
 
 if __name__ == '__main__':
     app.run(debug=True)
