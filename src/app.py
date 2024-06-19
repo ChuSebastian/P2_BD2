@@ -83,11 +83,11 @@ def search_query():
         ]
 
     else:
-        documents_with_scores = index_inverted.cosine_similarity(lyrics_query, top_k)
+        tracks_with_scores = index_inverted.cosine_similarity(lyrics_query, top_k)
 
         formatted_results = []
-        for idx, (document, score) in enumerate(documents_with_scores):
-            row = df.loc[df['track_id'] == document].iloc[0]
+        for idx, (track, score) in enumerate(tracks_with_scores):
+            row = df.loc[df['track_id'] == track].iloc[0]
 
             if pd.isna(row['lyrics']) or not row['lyrics'].strip():
                 lyrics_result = 'Columna lyrics vacia en la base de datos.'

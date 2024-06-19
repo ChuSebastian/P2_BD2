@@ -7,9 +7,9 @@ import numpy as np
 import struct
 
 class IndexInverted:
-    def __init__(self, file_name_data, number_of_documents, block_limit=200000, stop_words=True):
+    def __init__(self, file_name_data, number_of_tracks, block_limit=200000, stop_words=True):
         self.file_name_data = file_name_data
-        self.number_of_documents = number_of_documents
+        self.number_of_tracks = number_of_tracks
         self.block_limit = block_limit
         self.stop_words = stop_words
         self.index = {}
@@ -35,14 +35,14 @@ class IndexInverted:
         with open("data/results/merged_index.txt", "r") as file_global_index:
             for line in file_global_index:
                 postings_list = ast.literal_eval(line)[1]
-                idf = np.log10(self.number_of_documents / len(postings_list))
-                for document_id, tf in postings_list:
+                idf = np.log10(self.number_of_tracks / len(postings_list))
+                for track_id, tf in postings_list:
                     tf = np.log10(tf + 1)
-                    norms[document_id] = norms.get(document_id, 0) + (tf * idf) ** 2
+                    norms[track_id] = norms.get(track_id, 0) + (tf * idf) ** 2
         with open("data/results/norms.bin", "wb") as file_norms:
-            for document_id, norm in sorted(norms.items()):
+            for track_id, norm in sorted(norms.items()):
                 norm = round(np.sqrt(norm), 6)
-                id_encode = document_id.encode("utf-8")
+                id_encode = track_id.encode("utf-8")
                 norm_encode = struct.pack("f", norm)
                 file_norms.write(id_encode)
                 file_norms.write(norm_encode)
@@ -64,22 +64,22 @@ class IndexInverted:
                 low = mid + 1
         return None
 
-    def search_norm(self, document_id):
+    def search_norm(self, track_id):
         with open("data/results/norms.bin", "rb") as file_norms:
             file_size = os.fstat(file_norms.fileno()).st_size
-            record_size = len(document_id.encode("utf-8")) + struct.calcsize("f")
+            record_size = len(track_id.encode("utf-8")) + struct.calcsize("f")
             low = 0
             high = (file_size // record_size) - 1
             while low <= high:
                 mid = (low + high) // 2
                 file_norms.seek(mid * record_size)
-                id_encode = file_norms.read(len(document_id))
-                other_document_id = id_encode.decode("utf-8")
-                if document_id == other_document_id:
+                id_encode = file_norms.read(len(track_id))
+                other_track_id = id_encode.decode("utf-8")
+                if track_id == other_track_id:
                     norm_encode = file_norms.read(struct.calcsize("f"))
                     norm = struct.unpack("f", norm_encode)[0]
                     return norm
-                elif document_id < other_document_id:
+                elif track_id < other_track_id:
                     high = mid - 1
                 else:
                     low = mid + 1
@@ -94,28 +94,28 @@ class IndexInverted:
             postings_list = self.search_term(token)
 
             if postings_list:
-                idf = np.log10(self.number_of_documents / len(postings_list))
+                idf = np.log10(self.number_of_tracks / len(postings_list))
                 tf_query = np.log10(tf_query + 1)
                 wt_query = tf_query * idf
 
                 norm_query += np.square(wt_query)
 
-                for document_id, tf in postings_list:
+                for track_id, tf in postings_list:
                     tf = np.log10(tf + 1)
                     wt = tf * idf
 
-                    scores[document_id] = scores.get(document_id, 0) + wt_query * wt
+                    scores[track_id] = scores.get(track_id, 0) + wt_query * wt
 
         norm_query = np.sqrt(norm_query)
 
-        for document_id, score in scores.items():
-            norm_document = self.search_norm(document_id)
+        for track_id, score in scores.items():
+            norm_track = self.search_norm(track_id)
 
-            if norm_query != 0 and norm_document != 0:
-                scores[document_id] = score / (norm_query * norm_document)
+            if norm_query != 0 and norm_track != 0:
+                scores[track_id] = score / (norm_query * norm_track)
             else:
-                scores[document_id] = 0
+                scores[track_id] = 0
 
-        topk_documents = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:topk]
+        topk_tracks = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:topk]
 
-        return topk_documents
+        return topk_tracks
