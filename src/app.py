@@ -7,6 +7,7 @@ import pandas as pd
 from indexing import IndexInverted
 from preprocessing import stoplist
 from utils import extract_keywords_from_text
+import time  
 
 from postgres import get_db_connection,parse_tsvector
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
@@ -47,6 +48,8 @@ def search_query():
     top_k = int(request.form['top_k'])
     technique = request.form['technique']
 
+    start_time = time.time()  # Obtener el tiempo de inicio de la búsqueda
+
     if technique == 'postgres':
         # Conexión y consulta a la base de datos PostgreSQL
         conn = get_db_connection()
@@ -79,12 +82,9 @@ def search_query():
             for index, row in enumerate(results)
         ]
 
-        total_time = 0.1  # Este es un valor simulado para el tiempo total
     else:
-        # Realizamos la búsqueda utilizando el índice invertido
         documents_with_scores = index_inverted.cosine_similarity(lyrics_query, top_k)
 
-        # Preparar los resultados para pasar a la plantilla
         formatted_results = []
         for idx, (document, score) in enumerate(documents_with_scores):
             row = df.loc[df['track_id'] == document].iloc[0]
@@ -94,7 +94,6 @@ def search_query():
                 keywords = ''
             else:
                 lyrics_result = row['lyrics']
-                # Obtener keywords usando la función extract_keywords_from_text
                 content = f"{row['track_name']} {row['track_artist']} {lyrics_result}"
                 keywords = extract_keywords_from_text(content)
 
@@ -108,61 +107,10 @@ def search_query():
                 'keywords': keywords
             })
 
-        total_time = 0.1  # Este es un valor simulado para el tiempo total
+    end_time = time.time()  
+    total_time = end_time - start_time 
 
-    return render_template('results.html', query=lyrics_query, technique=technique, results=formatted_results, total_time=total_time)
-
-#@app.route('/search', methods=['POST'])
-#def search_query():
-#    lyrics = request.form['lyrics']
-#    top_k = int(request.form['top_k'])
-#    technique = request.form['technique']
-#
-#    if technique == 'postgres':
-#        # Conexión y consulta a la base de datos PostgreSQL
-#        conn = get_db_connection()
-#        cur = conn.cursor()
-#
-#        query = """
-#            SELECT ts_rank_cd(indexed, query) AS rank, track_id, track_name, track_artist, lyrics, keywords
-#            FROM track, plainto_tsquery('english', %s) query
-#            WHERE query @@ indexed
-#            ORDER BY rank DESC
-#            LIMIT %s;
-#        """
-#        cur.execute(query, (lyrics, top_k))
-#        results = cur.fetchall()
-#
-#        cur.close()
-#        conn.close()
-#
-#        # Convertimos los resultados a un formato adecuado para pasar a la plantilla
-#        formatted_results = [
-#            {
-#                'top': index + 1,
-#                'score': row[0],
-#                'track_id': row[1],
-#                'track_name': row[2],
-#                'track_artist': row[3],
-#                'lyrics': row[4],
-#                'keywords': parse_tsvector(row[5])
-#            }
-#            for index, row in enumerate(results)
-#        ]
-#
-#        total_time = 0.1  # Este es un valor simulado para el tiempo total
-#    else:
-#        # Simulación de resultados desde un archivo JSON
-#        json_path = os.path.join(os.path.dirname(__file__), '../data/results/outputEsperado.json')
-#        with open(json_path, 'r') as f:
-#            simulated_results = json.load(f)
-#
-#        # Filtramos los resultados según top_k
-#        formatted_results = simulated_results[:top_k]
-#
-#        total_time = 0.1  # Este es un valor simulado para el tiempo total
-#
-#    return render_template('results.html', query=lyrics, technique=technique, results=formatted_results, total_time=total_time)
+    return render_template('results.html', query=lyrics_query, technique=technique, results=formatted_results, total_time=round(total_time, 2))
 
 if __name__ == '__main__':
     app.run(debug=True)
