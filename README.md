@@ -78,7 +78,7 @@ WHERE track.track_id = x.track_id;
 ```
 - En este bloque de código, cada campo de texto (track_name, track_artist, lyrics) es convertido a un tsvector con diferentes ponderaciones (A, B, C) que pueden ser utilizadas para dar más o menos importancia a cada campo en las búsquedas.
 
-### Creación del índice
+## Creación del índice
 - Se crea un índice utilizando el método GIN (Generalized Inverted Index) sobre la columna indexed. Los índices GIN son particularmente efectivos para manejar datos que contienen múltiples valores en una sola columna (como vectores de texto).
   particular, la extensión relevante es más probable que se relacione con funcionalidades de búsqueda de texto completo.
 ```python
@@ -86,7 +86,7 @@ CREATE INDEX IF NOT EXISTS lyrics_idx_gin ON track USING gin(indexed);
 
 ```
 
-###Búsqueda y recuperación de datos 
+## Búsqueda y recuperación de datos 
 - Para buscar en los datos, se ajusta una configuración para deshabilitar las búsquedas secuenciales, lo cual fuerza a PostgreSQL a utilizar el índice GIN.
 ```python
 SET enable_seqscan TO OFF;
@@ -101,13 +101,23 @@ ORDER BY rank DESC LIMIT 100;
 
 
 
+## Experimentación 
+|    N   |  PostgreSQL  |  Implementacion  |
+|-------:|-------------:|-----------------:|
+|   100  |        0.128 |          0.428033 |
+|  1000  |        0.097 |          2.046529 |
+|  2000  |        0.127 |          3.185042 |
+|  4000  |        0.089 |          7.082197 |
+|  8000  |        0.083 |         17.902043 |
+| 16000  |        0.521 |         47.720579 |
+| 32000  |        0.215 |         79.181657 |
+| 64000  |        0.851 |        260.905411 |
 
 
 
 
-
-#Fronted
-##Fronted realizando busqueda
+# Fronted
+- Fronted realizando busqueda
 ![Imagen de Ejemplo](/front1.jpg "Vista de ejemplo")
 
 ![Imagen de Ejemplo](/front2.jpg "Vista de ejemplo")
