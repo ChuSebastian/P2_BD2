@@ -1,2 +1,5 @@
 .env/
 src/__pycache__
+data/blocks
+data/results
+src/*.ipynb
