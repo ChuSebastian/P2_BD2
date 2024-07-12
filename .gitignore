@@ -3,3 +3,4 @@ src/__pycache__
 data/blocks
 data/results
 data/*.ipynb
+src/SearchAudio/__pycache__
