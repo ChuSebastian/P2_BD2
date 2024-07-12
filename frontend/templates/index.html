@@ -3,7 +3,7 @@
 {% block content %}
 <div class="search-container">
     <h2>Buscar canciones por letra</h2>
-    <form action="{{ url_for('search_query') }}" method="post">
+    <form action="{{ url_for('search_query_lyrics') }}" method="post">
         <label for="lyrics">Letra:</label>
         <input type="text" id="lyrics" name="lyrics" required>
         
@@ -18,5 +18,9 @@
         
         <button type="submit">Buscar</button>
     </form>
+
+    <div class="navigation">
+        <a href="{{ url_for('search_query_audio') }}">Buscar por audio</a>
+    </div>
 </div>
 {% endblock %}

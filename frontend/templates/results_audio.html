@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="results-container">
+    <h2>Resultados de búsqueda por audio</h2>
+    <p><strong>Archivo de audio:</strong> {{ query }}</p>
+    <p><strong>Técnica utilizada:</strong> {{ technique }}</p>
+    <p><strong>Tiempo total:</strong> {{ total_time }} segundos</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Top</th>
+                <th>ID de la canción</th>
+                <th>Similitud</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.top }}</td>
+                <td>{{ result.track_id }}</td>
+                <td>{{ result.similarity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="search-container">
+    <h2>Buscar canciones por audio</h2>
+    <form action="{{ url_for('search_query_audio') }}" method="post" enctype="multipart/form-data">
+        <label for="audio_file">Subir archivo de audio (mp3 o wav):</label>
+        <input type="file" id="audio_file" name="audio_file" accept=".mp3, .wav" required>
+        
+        <label for="top_k">Top K resultados:</label>
+        <input type="number" id="top_k" name="top_k" min="1" required>
+        
+        <label for="technique">Técnica:</label>
+        <select id="technique" name="technique">
+            <option value="KNNseq">KNN Sequential</option>
+            <option value="KNNRtree">KNN Rtree</option>
+            <option value="KNNHighD">KNN HighD</option>
+        </select>
+
+        <button type="submit">Buscar</button>
+    </form>
+    <div class="navigation">
+        <a href="{{ url_for('index') }}">Buscar por letra</a>
+    </div>
+</div>
+{% endblock %}
