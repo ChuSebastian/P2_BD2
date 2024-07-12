@@ -1,8 +1,13 @@
 # funciones auxiliares: calculo TF-IDF, normalizacion de vectores, etc
-from typing import TypeVar,Generic, List, Optional
+from typing import TypeVar,Generic, List, Optional, Tuple
 import nltk
 import re
 from preprocessing import stemmer,stoplist
+import librosa
+import numpy as np
+import os
+import pickle
+from pydub import AudioSegment
 # https://www.javatpoint.com/min-heap-implementation-in-python
 T = TypeVar('T')
 
@@ -88,3 +93,33 @@ def extract_keywords_from_text(text):
         if stemmed_term not in stoplist and stemmed_term.isalpha():
             terms_count[stemmed_term] = True  # Usamos True solo para marcar la presencia del término
     return list(terms_count.keys())  # Devolvemos solo las palabras clave como una lista
+
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'mp3', 'wav'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def feature_extract(path,dim): # Funcion de extraccion de features de audio
+    x, sr = librosa.load(path)
+    if x.size == 0:
+        return None
+    x = x.astype(np.float32)
+    mfcc = np.mean(librosa.feature.mfcc(y=x,sr=sr,n_mfcc=dim).T,axis=0)
+    return mfcc
+
+def getFeatures(path,dim):
+    features = []
+    sample_path = os.path.join(f'{path}/df_features_{dim}.pkl')
+    with open(sample_path, 'rb') as f:
+        data = pickle.load(f)
+    for index, row in data.iterrows():
+        track_id = row['file_name'].replace('.wav', '')
+        mfcc = row.iloc[1:].to_numpy()
+        features.append((track_id, mfcc))
+    return features
+
+def convert_mp3_to_wav(mp3_path, wav_path): # pasar de mp3 a WAV
+    audio = AudioSegment.from_mp3(mp3_path)
+    audio.export(wav_path, format="wav")
