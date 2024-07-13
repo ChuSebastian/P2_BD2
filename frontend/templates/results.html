@@ -15,7 +15,8 @@
                 <th>Artista</th>
                 <th>Lyrics</th>
                 <th>Keywords</th>
-                <!--<th>Image</th>-->
+                <th>Reproducir</th>
+                <th>Buscar Similares</th>
             </tr>
         </thead>
         <tbody>
@@ -28,7 +29,36 @@
                 <td>{{ result.track_artist }}</td>
                 <td>{{ result.lyrics }}</td>
                 <td>{{ result.keywords | join(', ') }}</td>
-                <!-- <td><img src="{{ result.image }}" alt="{{ result.track_name }}" style="width:100px;height:auto;"></td> -->  
+                <td>
+                    {% if result.audio_url %}
+                    <audio controls>
+                        <source src="{{ result.audio_url }}" type="audio/wav">
+                        Tu navegador no soporta el elemento de audio.
+                    </audio>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>
+                    <form action="{{ url_for('search_similar', track_id=result.track_id) }}" method="post">
+                        <div>
+                            <label for="top_k">Top K:</label>
+                            <input type="number" id="top_k" name="top_k" min="1" value="10">
+                        </div>
+                        <div>
+                            <label>
+                                <input type="radio" name="technique" value="KNNseq" checked> KNNseq
+                            </label>
+                            <label>
+                                <input type="radio" name="technique" value="KNNRtree"> KNNRtree
+                            </label>
+                            <label>
+                                <input type="radio" name="technique" value="KNNHighD"> KNNHighD
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Buscar Similares</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

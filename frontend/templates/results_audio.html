@@ -1,17 +1,20 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="results-container">
-    <h2>Resultados de búsqueda por audio</h2>
-    <p><strong>Archivo de audio:</strong> {{ query }}</p>
-    <p><strong>Técnica utilizada:</strong> {{ technique }}</p>
-    <p><strong>Tiempo total:</strong> {{ total_time }} segundos</p>
-    
+    <h2>Resultados de la búsqueda por audio</h2>
+    <p>Mostrando resultados similares para el track ID: "{{ query }}" usando {{ technique }}.</p>
+    <p>Tiempo total: {{ total_time }} segundos.</p>
     <table>
         <thead>
             <tr>
                 <th>Top</th>
-                <th>ID de la canción</th>
+                <th>Track ID</th>
+                <th>Nombre</th>
+                <th>Artista</th>
                 <th>Similitud</th>
+                <th>Reproducir</th>
+                <th>Buscar Similares</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +22,35 @@
             <tr>
                 <td>{{ result.top }}</td>
                 <td>{{ result.track_id }}</td>
+                <td>{{ result.track_name }}</td>
+                <td>{{ result.track_artist }}</td>
                 <td>{{ result.similarity }}</td>
+                <td>
+                    <audio controls>
+                        <source src="{{ result.audio_url }}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                </td>
+                <td>
+                    <form action="{{ url_for('search_similar', track_id=result.track_id) }}" method="post">
+                        <div>
+                            <label for="top_k">Top K:</label>
+                            <input type="number" id="top_k" name="top_k" min="1" value="10">
+                        </div>
+                        <div>
+                            <label>
+                                <input type="radio" name="technique" value="KNNseq" checked> KNNseq
+                            </label>
+                            <label>
+                                <input type="radio" name="technique" value="KNNRtree"> KNNRtree
+                            </label>
+                            <label>
+                                <input type="radio" name="technique" value="KNNHighD"> KNNHighD
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Buscar Similares</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

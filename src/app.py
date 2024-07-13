@@ -1,64 +1,77 @@
 # Punto de entrada de la aplicacion flask
-
-from flask import Flask, render_template, request, redirect
-import json
+from postgres import get_db_connection, parse_tsvector
+from flask import Flask, render_template, request, redirect, url_for
 import os
 import pandas as pd
 from indexing import IndexInverted
 from preprocessing import stoplist
 from utils import *
-import time  
+import time
 from SearchAudio.KNNseq import KNN_Sequential
 from SearchAudio.KNNRtree import KNN_RTree
 from SearchAudio.KNNHihgD import KNN_HighD
 
-from postgres import get_db_connection,parse_tsvector
+
+
+def initialize_app():
+    # Configuración de la base de datos e índice invertido
+    spotify_song = 'data/spotify_songs.csv'
+    index_file_name = 'data/results/merged_index.txt'
+    features_file_name = 'data/Features'
+
+    # Carga el DataFrame
+    global df
+    df = pd.read_csv(spotify_song)
+    tamanio = len(df)
+
+    # Inicializa el índice invertido
+    global index_inverted
+    index_inverted = IndexInverted(spotify_song, tamanio, block_limit=20000, stop_words=stoplist)
+
+    # Carga o crea el índice y los features
+    if os.path.exists(index_file_name):
+        try:
+            index_inverted.load_index(index_file_name)
+            print("Índice cargado.")
+        except Exception as e:
+            print(f"Error al cargar el índice: {e}")
+    else:
+        try:
+            index_inverted.create_index_inverted()
+            print("Índice creado.")
+        except Exception as e:
+            print(f"Error al crear el índice: {e}")
+
+    # Inicializar y cargar los features
+    global features, knn_sequential, knn_rtree, knn_highD, dim
+    dim = 128
+    features = getFeatures(features_file_name, dim)  # probando 128 dimensiones, es lo MAX
+    print("Features cargados.")
+
+    # Parametros de los KNN
+    m = 100
+    num_bits = 256
+
+    # Inicializar las estructuras KNN
+    knn_sequential = KNN_Sequential(features)
+    knn_rtree = KNN_RTree(m, features)
+    knn_highD = KNN_HighD(num_bits, features)
+    print("Estructuras KNN cargados.")
+
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
-UPLOAD_FOLDER = 'uploads'
+
+UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
+AUDIO_FOLDER = os.path.join(app.static_folder, 'audio')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['AUDIO_FOLDER'] = AUDIO_FOLDER
+
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+if not os.path.exists(AUDIO_FOLDER):
+    os.makedirs(AUDIO_FOLDER)
 
-# Configuración de la base de datos e índice invertido
-spotify_song = 'data/spotify_songs.csv'
-index_file_name = 'data/results/merged_index.txt'
-features_file_name = 'data/Features'
-
-# Carga el DataFrame
-df = pd.read_csv(spotify_song)
-tamanio = len(df)
-
-# Inicializa el índice invertido
-index_inverted = IndexInverted(spotify_song, tamanio, block_limit=20000, stop_words=stoplist)
-
-# Carga o crea el índice y los features
-if os.path.exists(index_file_name):
-    try:
-        index_inverted.load_index(index_file_name)
-        print("Índice cargado.")
-
-    except Exception as e:
-        print(f"Error al cargar el índice: {e}")
-else:
-    try:
-        index_inverted.create_index_inverted()
-        print("Índice creado.")
-    except Exception as e:
-        print(f"Error al crear el índice: {e}")
-
-# Inicializar y cargar los features
-dim = 128
-features = getFeatures(features_file_name,dim) # probando 128 dimensiones, es lo MAX
-print("Features cargados.")
-# Parametros de los KNN
-m = 100
-num_bits = 128
-# Inicializar las estructuras KNN
-knn_sequential = KNN_Sequential(features)
-knn_rtree = KNN_RTree(m, features)
-knn_highD = KNN_HighD(num_bits, features)
-print("Estructuras KNN cargados.")
+initialize_app()
 
 @app.route('/')
 def index():
@@ -99,7 +112,8 @@ def search_query_lyrics():
                 'track_name': row[2],
                 'track_artist': row[3],
                 'lyrics': row[4],
-                'keywords': parse_tsvector(row[5])
+                'keywords': parse_tsvector(row[5]),
+                'audio_url': url_for('static', filename=f"audio/{row[1]}.wav")  # Añadido audio_url
             }
             for index, row in enumerate(results)
         ]
@@ -126,13 +140,60 @@ def search_query_lyrics():
                 'track_name': row['track_name'],
                 'track_artist': row['track_artist'],
                 'lyrics': lyrics_result,
-                'keywords': keywords
+                'keywords': keywords,
+                'audio_url': url_for('static', filename=f"audio/{row['track_id']}.wav")
             })
 
     end_time = time.time()  
     total_time = end_time - start_time 
 
     return render_template('results.html', query=lyrics_query, technique=technique, results=formatted_results, total_time=round(total_time, 2))
+
+@app.route('/search_similar/<track_id>', methods=['GET', 'POST'])
+def search_similar(track_id):
+    if request.method == 'POST':
+        technique = request.form['technique']
+        top_k = int(request.form['top_k'])
+    else:
+        technique = 'KNNseq'  # Default technique
+        top_k = 5
+
+    audio_file_path = os.path.join(app.config['AUDIO_FOLDER'], f'{track_id}.wav')
+    if not os.path.exists(audio_file_path):
+        return f"No se encontró el archivo de audio para el track ID: {track_id}", 404
+
+    query_mfcc = feature_extract(audio_file_path, dim)
+
+    start_time = time.time()
+
+    if technique == 'KNNseq':
+        results = knn_sequential.knn_heap_query(query_mfcc, top_k)  
+    elif technique == 'KNNRtree':
+        results = knn_rtree.query(query_mfcc, top_k)
+    elif technique == 'KNNHighD':
+        results = knn_highD.knn_query(query_mfcc, top_k)
+    else:
+        results = []
+
+    end_time = time.time()
+    total_time = end_time - start_time
+
+    # Formatear los resultados con información adicional
+    formatted_results = []
+    for index, result in enumerate(results):
+        track_info = df.loc[df['track_id'] == result[0]].iloc[0]
+        formatted_results.append({
+            'top': index + 1,
+            'track_id': result[0],
+            'similarity': result[1],
+            'track_name': track_info['track_name'],
+            'track_artist': track_info['track_artist'],
+            'audio_url': url_for('static', filename=f'audio/{result[0]}.wav')
+        })
+
+    return render_template('results_audio.html', query=track_id, technique=technique, results=formatted_results, total_time=total_time)
+
+
 
 @app.route('/search_audio', methods=['GET', 'POST'])
 def search_query_audio():
@@ -178,15 +239,17 @@ def search_query_audio():
             end_time = time.time()
             total_time = end_time - start_time
 
-            # Formatear los resultados
-            formatted_results = [
-                {
+            formatted_results = []
+            for index, result in enumerate(results):
+                track_info = df.loc[df['track_id'] == result[0]].iloc[0]
+                formatted_results.append({
                     'top': index + 1,
                     'track_id': result[0],
-                    'similarity': result[1]
-                }
-                for index, result in enumerate(results)
-            ]
+                    'similarity': result[1],
+                    'track_name': track_info['track_name'],
+                    'track_artist': track_info['track_artist'],
+                    'audio_url': url_for('static', filename=f'audio/{result[0]}.wav')
+                })
 
             return render_template('results_audio.html', query=audio_file.filename, technique=technique, results=formatted_results, total_time=total_time)
 
