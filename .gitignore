@@ -4,3 +4,5 @@ data/blocks
 data/results
 data/*.ipynb
 src/SearchAudio/__pycache__
+frontend/static/audio
+frontend/static/uploads
