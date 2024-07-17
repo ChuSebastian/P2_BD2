@@ -26,6 +26,7 @@
                 <p>Audio no disponible</p>
                 {% endif %}
             </div>
+            {% if result.audio_url %}
             <div class="card-actions">
                 <form action="{{ url_for('search_similar', track_id=result.track_id) }}" method="post">
                     <label for="top_k-{{ result.track_id }}">Top K:</label>
@@ -55,6 +56,7 @@
                     <button type="submit" class="btn btn-primary">Buscar Similares</button>
                 </form>
             </div>
+            {% endif %}
         </div>
 
         <!-- Modal para mostrar la letra -->
