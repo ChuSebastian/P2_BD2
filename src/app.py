@@ -113,7 +113,7 @@ def search_query_lyrics():
                 'track_artist': row[3],
                 'lyrics': row[4],
                 'keywords': parse_tsvector(row[5]),
-                'audio_url': url_for('static', filename=f"audio/{row[1]}.wav")  # Añadido audio_url
+                'audio_url': url_for('static', filename=f"audio/{row[1]}.wav")
             }
             for index, row in enumerate(results)
         ]
@@ -144,8 +144,8 @@ def search_query_lyrics():
                 'audio_url': url_for('static', filename=f"audio/{row['track_id']}.wav")
             })
 
-    end_time = time.time()  
-    total_time = end_time - start_time 
+    end_time = time.time()
+    total_time = end_time - start_time
 
     return render_template('results.html', query=lyrics_query, technique=technique, results=formatted_results, total_time=round(total_time, 2))
 
@@ -153,10 +153,14 @@ def search_query_lyrics():
 def search_similar(track_id):
     if request.method == 'POST':
         technique = request.form['technique']
+        knn_type = request.form.get('knn_type')
+        parameter = request.form.get('parameter')
         top_k = int(request.form['top_k'])
     else:
         technique = 'KNNseq'  # Default technique
         top_k = 5
+        knn_type = None
+        parameter = None
 
     audio_file_path = os.path.join(app.config['AUDIO_FOLDER'], f'{track_id}.wav')
     if not os.path.exists(audio_file_path):
@@ -167,7 +171,13 @@ def search_similar(track_id):
     start_time = time.time()
 
     if technique == 'KNNseq':
-        results = knn_sequential.knn_heap_query(query_mfcc, top_k)  
+        if knn_type == 'neighbors':
+            results = knn_sequential.knn_heap_query(query_mfcc, int(parameter))
+        elif knn_type == 'radius':
+            results = knn_sequential.range_query(query_mfcc, float(parameter))
+        else:
+            results = knn_sequential.knn_heap_query(query_mfcc, top_k)
+        # results = knn_sequential.knn_heap_query(query_mfcc, top_k)
     elif technique == 'KNNRtree':
         results = knn_rtree.query(query_mfcc, top_k)
     elif technique == 'KNNHighD':
@@ -202,8 +212,10 @@ def search_query_audio():
             return redirect(request.url)
         
         audio_file = request.files['audio_file']
-        top_k = int(request.form['top_k'])
         technique = request.form['technique']
+        knn_type = request.form.get('knn_type')
+        parameter = request.form.get('parameter')
+        top_k = request.form.get('top_k') # en caso obtenga un vacio no se rompa al intentar convertirlo a int
 
         if audio_file.filename == '':
             return redirect(request.url)
@@ -223,16 +235,23 @@ def search_query_audio():
             query_mfcc = feature_extract(query_path, dim)
 
             start_time = time.time()
-            results: List[Tuple[str, float]]
+            # results: List[Tuple[str, float]]
+            results = []
 
             if technique == 'KNNseq':
-                results = knn_sequential.knn_heap_query(query_mfcc, top_k)
+                if knn_type == 'neighbors':
+                    results = knn_sequential.knn_heap_query(query_mfcc, int(parameter))
+                elif knn_type == 'radius':
+                    results = knn_sequential.range_query(query_mfcc, float(parameter))
+                else:
+                    results = knn_sequential.knn_heap_query(query_mfcc, int(top_k) if top_k else 5)
+                # results = knn_sequential.knn_heap_query(query_mfcc, top_k)
 
             elif technique == 'KNNRtree':
-                results = knn_rtree.query(query_mfcc, top_k)
+                results = knn_rtree.query(query_mfcc, int(top_k))
 
             elif technique == 'KNNHighD':
-                results = knn_highD.knn_query(query_mfcc, top_k)
+                results = knn_highD.knn_query(query_mfcc, int(top_k))
             else:
                 return redirect(request.url)
 

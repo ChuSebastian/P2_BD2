@@ -1,4 +1,5 @@
 .env/
+env/
 src/__pycache__
 data/blocks
 data/results

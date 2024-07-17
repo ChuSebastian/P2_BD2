@@ -1,3 +1,4 @@
+<!-- search_audio.html -->
 {% extends "base.html" %}
 {% block content %}
 <div class="search-container">
@@ -5,16 +6,32 @@
     <form action="{{ url_for('search_query_audio') }}" method="post" enctype="multipart/form-data">
         <label for="audio_file">Subir archivo de audio (mp3 o wav):</label>
         <input type="file" id="audio_file" name="audio_file" accept=".mp3, .wav" required>
-        
-        <label for="top_k">Top K resultados:</label>
-        <input type="number" id="top_k" name="top_k" min="1" required>
-        
+
         <label for="technique">Técnica:</label>
-        <select id="technique" name="technique">
+        <select id="technique" name="technique" onchange="updateParameterInput()">
+            <option value="">-- Selecciona una técnica --</option>
             <option value="KNNseq">KNN Sequential</option>
             <option value="KNNRtree">KNN Rtree</option>
             <option value="KNNHighD">KNN HighD</option>
         </select>
+        
+        <div id="knn-options" style="display: none;">
+            <label for="knn_type">Tipo de búsqueda KNN:</label>
+            <select id="knn_type" name="knn_type" onchange="updateParameterInput()">
+                <option value="neighbors">Buscar por Vecinos (K)</option>
+                <option value="radius">Buscar por Radio (R)</option>
+            </select>
+        </div>
+
+        <div id="parameter-input" style="display: none;">
+            <label id="parameter-label" for="parameter">Parámetro:</label>
+            <input type="number" id="parameter" name="parameter" min="1">
+        </div>
+
+        <div id="top-k-input" style="display: none;">
+            <label for="top_k">Top K resultados:</label>
+            <input type="number" id="top_k" name="top_k" min="1">
+        </div>
 
         <button type="submit">Buscar</button>
     </form>
@@ -22,4 +39,37 @@
         <a href="{{ url_for('index') }}">Buscar por letra</a>
     </div>
 </div>
+
+<script>
+function updateParameterInput() {
+    var technique = document.getElementById('technique').value;
+    var knnOptions = document.getElementById('knn-options');
+    var parameterInput = document.getElementById('parameter-input');
+    var topKInput = document.getElementById('top-k-input');
+    var parameterLabel = document.getElementById('parameter-label');
+    var parameter = document.getElementById('parameter');
+
+    if (technique === 'KNNseq') {
+        knnOptions.style.display = 'block';
+        var knnType = document.getElementById('knn_type').value;
+        if (knnType === 'neighbors') {
+            parameterLabel.textContent = 'Número de Vecinos (K):';
+            parameter.type = 'number';
+        } else if (knnType === 'radius') {
+            parameterLabel.textContent = 'Radio (R):';
+            parameter.type = 'number';
+        }
+        parameterInput.style.display = 'block';
+        topKInput.style.display = 'none';
+    } else if (technique === 'KNNRtree' || technique === 'KNNHighD') {
+        knnOptions.style.display = 'none';
+        parameterInput.style.display = 'none';
+        topKInput.style.display = 'block';
+    } else {
+        knnOptions.style.display = 'none';
+        parameterInput.style.display = 'none';
+        topKInput.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
