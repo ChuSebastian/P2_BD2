@@ -133,6 +133,10 @@ def search_query_lyrics():
                 content = f"{row['track_name']} {row['track_artist']} {lyrics_result}"
                 keywords = extract_keywords_from_text(content)
 
+            audio_path = os.path.join(app.config['AUDIO_FOLDER'], f"{row['track_id']}.wav")
+            audio_url = url_for('static', filename=f"audio/{row['track_id']}.wav") if os.path.exists(audio_path) else None
+
+
             formatted_results.append({
                 'top': idx + 1,
                 'score': score,
@@ -141,7 +145,7 @@ def search_query_lyrics():
                 'track_artist': row['track_artist'],
                 'lyrics': lyrics_result,
                 'keywords': keywords,
-                'audio_url': url_for('static', filename=f"audio/{row['track_id']}.wav")
+                'audio_url': audio_url
             })
 
     end_time = time.time()
@@ -267,6 +271,7 @@ def search_query_audio():
                     'similarity': result[1],
                     'track_name': track_info['track_name'],
                     'track_artist': track_info['track_artist'],
+                    'lyrics': track_info['lyrics'],
                     'audio_url': url_for('static', filename=f'audio/{result[0]}.wav')
                 })
 

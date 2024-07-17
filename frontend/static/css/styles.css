@@ -1,7 +1,129 @@
 /* frontend/static/css/styles.css */
 
 /* Estilos generales para la página */
+
+/* frontend/static/css/styles.css */
+
+/* Estilos generales para la página */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+}
+
 body {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #1db954;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    width: auto;
+}
+
+main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+footer {
+    background-color: #1db954;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: relative;
+    width: auto;
+    bottom: 0;
+}
+
+main::-webkit-scrollbar {
+    width: 12px;
+}
+
+main::-webkit-scrollbar-track {
+    background: #333;
+}
+
+main::-webkit-scrollbar-thumb {
+    background-color: #1db954;
+    border-radius: 10px;
+    border: 3px solid #333;
+}
+
+.results-container {
+    margin-top: 2rem;
+}
+
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+/* para los inputs */
+input[type="number"],
+input[type="text"],
+input[type="file"],
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background-color: #282828;
+    color: #fff;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+input[type="number"]::placeholder,
+input[type="text"]::placeholder,
+select::placeholder {
+    color: #b3b3b3;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+    border-color: #1db954;
+    outline: none;
+}
+
+/* botones */
+button {
+    background-color: #1db954;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #1ed760;
+}
+
+/* Estilos para los enlaces */
+a {
+    font-size: 15px;
+    color: #1db954;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #1ed760;
+}
+
+/* body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     margin: 0;
@@ -50,7 +172,7 @@ td img {
     max-width: 100px;
 }
 
-/* Ajustes específicos para el ancho de columnas */
+
 th.top, td.top {
     width: 5%;
 }
@@ -81,5 +203,5 @@ th.keywords, td.keywords {
 
 th.image, td.image {
     width: 10%;
-}
+} */
 

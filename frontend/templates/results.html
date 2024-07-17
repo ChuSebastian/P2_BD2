@@ -2,66 +2,113 @@
 
 {% block content %}
 <div class="results-container">
+    <div class="navigation">
+        <a href="{{ url_for('index') }}">Volver al inicio</a>
+    </div>
+
     <h2>Resultados de la búsqueda</h2>
     <p>Mostrando resultados para: "{{ query }}" usando {{ technique }}.</p>
     <p>Tiempo total: {{ total_time }} segundos.</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Top</th>
-                <th>Score</th>
-                <th>Track ID</th>
-                <th>Nombre</th>
-                <th>Artista</th>
-                <th>Lyrics</th>
-                <th>Keywords</th>
-                <th>Reproducir</th>
-                <th>Buscar Similares</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in results %}
-            <tr>
-                <td>{{ result.top }}</td>
-                <td>{{ result.score }}</td>
-                <td>{{ result.track_id }}</td>
-                <td>{{ result.track_name }}</td>
-                <td>{{ result.track_artist }}</td>
-                <td>{{ result.lyrics }}</td>
-                <td>{{ result.keywords | join(', ') }}</td>
-                <td>
-                    {% if result.audio_url %}
-                    <audio controls>
-                        <source src="{{ result.audio_url }}" type="audio/wav">
-                        Tu navegador no soporta el elemento de audio.
-                    </audio>
-                    {% else %}
-                    N/A
-                    {% endif %}
-                </td>
-                <td>
-                    <form action="{{ url_for('search_similar', track_id=result.track_id) }}" method="post">
-                        <div>
-                            <label for="top_k">Top K:</label>
-                            <input type="number" id="top_k" name="top_k" min="1" value="10">
-                        </div>
-                        <div>
-                            <label>
-                                <input type="radio" name="technique" value="KNNseq" checked> KNNseq
-                            </label>
-                            <label>
-                                <input type="radio" name="technique" value="KNNRtree"> KNNRtree
-                            </label>
-                            <label>
-                                <input type="radio" name="technique" value="KNNHighD"> KNNHighD
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Buscar Similares</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="cards-container">
+        {% for result in results %}
+        <div class="card">
+            <div class="card-content">
+                <h3>{{ result.track_name }}</h3>
+                <p>Artista: {{ result.track_artist }}</p>
+                <p>Score: {{ result.score }}</p>
+                <button onclick="showLyricsModal('{{ result.track_id }}')">Ver Letra</button>
+                {% if result.audio_url %}
+                <audio controls>
+                    <source src="{{ result.audio_url }}" type="audio/wav">
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+                {% else %}
+                <p>Audio no disponible</p>
+                {% endif %}
+            </div>
+            {% if result.audio_url %}
+            <div class="card-actions">
+                <form action="{{ url_for('search_similar', track_id=result.track_id) }}" method="post">
+                    <label for="top_k-{{ result.track_id }}">Top K:</label>
+                    <input type="number" id="top_k-{{ result.track_id }}" name="top_k" min="1" value="10">
+                    
+                    <label for="technique-{{ result.track_id }}">Técnica:</label>
+                    <select id="technique-{{ result.track_id }}" name="technique" onchange="updateParameterInput('{{ result.track_id }}')">
+                        <option value="">-- Selecciona una técnica --</option>
+                        <option value="KNNseq">KNN Sequential</option>
+                        <option value="KNNRtree">KNN Rtree</option>
+                        <option value="KNNHighD">KNN HighD</option>
+                    </select>
+                    
+                    <div id="knn-options-{{ result.track_id }}" style="display: none;">
+                        <label for="knn_type-{{ result.track_id }}">Tipo de búsqueda KNN:</label>
+                        <select id="knn_type-{{ result.track_id }}" name="knn_type" onchange="updateParameterInput('{{ result.track_id }}')">
+                            <option value="neighbors">Buscar por Vecinos (K)</option>
+                            <option value="radius">Buscar por Radio (R)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="parameter-input-{{ result.track_id }}" style="display: none;">
+                        <label id="parameter-label-{{ result.track_id }}" for="parameter-{{ result.track_id }}">Parámetro:</label>
+                        <input type="number" id="parameter-{{ result.track_id }}" name="parameter" min="1">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Buscar Similares</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Modal para mostrar la letra -->
+        <div id="lyricsModal-{{ result.track_id }}" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeLyricsModal('{{ result.track_id }}')">&times;</span>
+                <h2>Letra de {{ result.track_name }}</h2>
+                <p>{{ result.lyrics }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<script>
+function showLyricsModal(track_id) {
+    document.getElementById('lyricsModal-' + track_id).style.display = 'block';
+}
+
+function closeLyricsModal(track_id) {
+    document.getElementById('lyricsModal-' + track_id).style.display = 'none';
+}
+
+function updateParameterInput(track_id) {
+    var technique = document.getElementById('technique-' + track_id).value;
+    var knnOptions = document.getElementById('knn-options-' + track_id);
+    var parameterInput = document.getElementById('parameter-input-' + track_id);
+    var topKInput = document.getElementById('top_k-' + track_id);
+    var parameterLabel = document.getElementById('parameter-label-' + track_id);
+    var parameter = document.getElementById('parameter-' + track_id);
+
+    if (technique === 'KNNseq') {
+        knnOptions.style.display = 'block';
+        var knnType = document.getElementById('knn_type-' + track_id).value;
+        if (knnType === 'neighbors') {
+            parameterLabel.textContent = 'Número de Vecinos (K):';
+            parameter.type = 'number';
+        } else if (knnType === 'radius') {
+            parameterLabel.textContent = 'Radio (R):';
+            parameter.type = 'number';
+        }
+        parameterInput.style.display = 'block';
+        topKInput.style.display = 'none';
+    } else if (technique === 'KNNRtree' || technique === 'KNNHighD') {
+        knnOptions.style.display = 'none';
+        parameterInput.style.display = 'none';
+        topKInput.style.display = 'block';
+    } else {
+        knnOptions.style.display = 'none';
+        parameterInput.style.display = 'none';
+        topKInput.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
