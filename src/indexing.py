@@ -1,7 +1,7 @@
 # construccion del indice invertido
 import os
 from spimi import SPIMI
-from preprocessing import preprocessing,preprocessing_content
+from preprocessing import preprocessing, preprocessing_content
 import ast
 import numpy as np
 import struct

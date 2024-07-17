@@ -29,18 +29,18 @@ def initialize_app():
     index_inverted = IndexInverted(spotify_song, tamanio, block_limit=20000, stop_words=stoplist)
 
     # Carga o crea el índice y los features
-    if os.path.exists(index_file_name):
-        try:
-            index_inverted.load_index(index_file_name)
-            print("Índice cargado.")
-        except Exception as e:
-            print(f"Error al cargar el índice: {e}")
-    else:
+    if not os.path.exists(index_file_name):
         try:
             index_inverted.create_index_inverted()
             print("Índice creado.")
         except Exception as e:
             print(f"Error al crear el índice: {e}")
+    else:
+        try:
+            index_inverted.load_index(index_file_name)
+            print("Índice cargado.")
+        except Exception as e:
+            print(f"Error al cargar el índice: {e}")
 
     # Inicializar y cargar los features
     global features, knn_sequential, knn_rtree, knn_highD, dim

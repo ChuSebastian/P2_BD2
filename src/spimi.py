@@ -25,6 +25,7 @@ BSBIndexConstruction():
     MergeBlocks(f1,...,fn;f_merged)
 '''
 
+import os
 import sys
 from utils import MinHeap
 from ast import literal_eval
@@ -37,6 +38,8 @@ class SPIMI:
         self.index_file_name = "data/results/merged_index.txt"
         
     def WriteBlockToDisk(self, dictionary, prefix, block_n):
+        if not os.path.exists("data/blocks"):
+            os.makedirs("data/blocks")
         
         file_name = f"data/blocks/{prefix}_{block_n}.txt"
         with open(file_name, "w") as f:
