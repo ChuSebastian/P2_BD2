@@ -7,3 +7,4 @@ data/*.ipynb
 src/SearchAudio/__pycache__
 frontend/static/audio
 frontend/static/uploads
+README2.md
